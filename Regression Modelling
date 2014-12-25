@@ -1,0 +1,6 @@
+DATASPECIALE1612 <- read.csv("C:/Users/Nimo/Desktop/Job/Regression/DATASPECIALE1612.csv")
+Model<-lm(indlaeg.1000~Fuldtidsled.100+Foertids.100+udenErhvervs.100+Kontanthjaelp.100+Indbyg+Areal+Udg.Sygedag+Forebygbesoeg.1000+Sygehusikom+Forebygindlaeg.1000+Udg.hjemsygplej+Udg..Forbyg+Finder.Aarstal+Udg.Genop+Andel65.,data=DATASPECIALE1612)
+
+anova(Model)
+summary(Model)$coefficients
+plot(Model)
