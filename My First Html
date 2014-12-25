@@ -1,0 +1,252 @@
+#FQ1: Another WindFarm
+
+##FQ1.01: Fitting the model
+```{r}
+load("C:/Users/Nimo/Desktop/Job/Final/WindFarm.rda")
+RSpd<-WindFarm[[1]]
+CSpd<-WindFarm[[2]]
+fit=lm(CSpd~RSpd)
+```
+
+```{r}
+coef(fit)
+```
+The linear equation is given CSpd = 2.793933 + 0.749237RSpd
+
+##FQ1.02: Validating the regression with diagnostic plots
+```{r, echo=FALSE}
+plot(fit)
+```
+###FQ1.02.1: Linear relationship
+The plots show that the relationship between Cspd and Rspd in linear. This is because of the random pattern of the residual plots hence indicating that it is a good fit for a linear model.
+
+###FQ1.02.2: Normal error terms
+The unobserved errors of the regression equation appear to be normally distributed. This is because their shape slightly resembles the normal curve.
+
+###FQ1.02.3: Constant variance of the error terms
+The unobserved errors of the regression equation appear to have the same variance. This is because the values are very close in the scale location graph.
+
+##FQ1.03: Mean wind speed at the candidate site
+```{r}
+RSpd.mean=mean(RSpd)
+CSpd.mean=2.793933+(0.749237*RSpd.mean)
+CSpd.mean
+```
+ 
+The mean at the candidate site is estimated at 10.20565 m/s.
+
+##FQ1.04: Make Predictors data frame
+```{r}
+Predictor<-data.frame(RSpd)
+```
+
+##FQ1.05: Estimate the mean wind speed at the candidate site
+```{r}
+conf.interval<-predict(fit,Predictor,interval="confidence",level=0.99)
+lower.limit<-CSpd.mean-(qnorm(0.99,mean(CSpd),sd(CSpd))*sd(CSpd)/sqrt(length(CSpd)))
+upper.limit<-CSpd.mean+(qnorm(0.99,mean(CSpd),sd(CSpd))*sd(CSpd)/sqrt(length(CSpd)))
+lower.limit;upper.limit
+```
+
+The confidence interval for the mean of the wind speed at the candidate site is given by (7.282461 m/s,13.128832 m/s).
+
+##FQ1.06: Is the candidate site economically viable
+The candidate site is not economically viable since the required wind speed of 15 m/s is not within the confidence interval.
+
+
+#FQ2: Grandfather clock auction
+
+##FQ2.01: Scatterplot matrix
+```{r}
+load("C:/Users/Nimo/Desktop/Job/Final/Auction.rda")
+Age<-Auction[[1]]
+Bidders<-Auction[[2]]
+Bid<-Auction[[3]]
+plot(Auction)
+```
+
+##FQ2.02: Interpretation of the scatterplot matrix
+The age of the Grandfather clock and the amount of the winning bid appear to have a poisitive slope hence indicating that there is a positive correlation. 
+The winning bid and the amount of the bidders also appear to have a positive correlation since they appear to also have a positive slope.
+The age of the Grandfather clock and the number of bidders appear to have a slope of zero and hence the  conclusion is that they have no correlation.
+
+##FQ2.03: Adjust Bid for Age
+Removing the linear component of Age on Bid;
+```{r}
+fit.bid.age<-lm(Bid~Age)
+Bid.Age<-resid(fit.bid.age)
+```
+
+##FQ2.04: Adjust Bidders for Age
+Removing the linear component of Age on Bidders;
+
+```{r}
+fit.bidders.age<-lm(Bidders~Age)
+Bider.Age<-resid(fit.bidders.age)
+```
+
+##FQ2.04: Plot Bid.Age~Bidders.Age
+Plotting the residuals;
+```{r}
+library(ggplot2)
+data<-data.frame(Bid.Age,Bider.Age)
+ggplot(data,aes(x=Bider.Age,y=Bid.Age,color="variable"))+geom_line()+geom_point()
+```
+
+##FQ2.05: Interpretation of the scatterplot
+There appears to have a positive slope. This signifies that there is a positive correlation in the residuals. The relationship suggests that as one residual increases, the other does too.
+
+##FQ2.06: Fit Bid.Age~Bidders.Age
+```{r}
+lm(Bid.Age~Bider.Age)
+```
+
+The slope coefficient of the partial regression of Bid regressed on Bidders after adjusting for Age is given by 75.18.
+
+##FQ2.07: Adjust Bid for Bidders
+```{r}
+fit2<-lm(Bid~Bidders)
+Bid.Bidders<-resid(fit2)
+```
+
+##FQ2.08: Adjust Age for Bidders
+```{r}
+fit3<-lm(Bidders~Age)
+Bider.Age<-resid(fit3)
+```
+
+##FQ2.09:Plot Bid.Bidders~Age.Bidders
+```{r}
+data2=data.frame(Bid.Bidders,Bider.Age)
+ggplot(data2,aes(x=Bider.Age,y=Bid.Bidders))+geom_line()
+```
+
+##FQ2.10: Interpretation of the scatterplot
+There does not appear to be a linear relationship between the two residuals. This is because the data points appears to be very random.
+
+##FQ2.10: Fit Bid.Bidders~Age.Bidders
+```{r}
+fit4<-lm(Bid.Bidders~Bider.Age);fit4
+```
+
+The estimated regression coefficient is given by 10.78. This means that the value of the residuals in Bider.Age are much higher than those in Bid.Bidders.
+
+##FQ2.11: Fit the multiple regression model Bid~Age+Bidders
+```{r}
+fit5<-lm(Bid~Age+Bidders);fit5
+```
+
+##FQ2.12: Summarize your findings
+The regression coefficients are given as
+```{r}
+Age.coefficient=c("Age",NA,10.78,15.54)
+Bidders.coefficient=c("Bidders",75.18,NA,75.18)
+Labels=c("Model","Bid.Age~Bider.Age","Bid.Bidders~Bider.Age","Bid~Age+Bidders")
+data.frame(Labels,Age.coefficient,Bidders.coefficient)
+```
+
+##FQ2.13: Relationship between partial regression coefficients and the multiple regression coefficients
+The intercept coefficient is much higher for the multiple regression than for the partial regression. The coefficient for the Bidders variable is the same as that of the partial regression Bider.Age variable.
+
+
+
+#FQ3: Condo operating margin
+
+##FQ3.1: Create a time series plot
+```{r}
+load("C:/Users/Nimo/Desktop/Job/Final/Condo.rda")
+library(ggplot2)
+ggplot(Condo,aes(x=t,y=operatingMargin))+geom_line()+geom_point(aes(color=month))
+```
+
+##FQ3.2: Inspection of the time series plot
+There is seasonality in the data. This is evidenced by a peak then a large drop in the operating margin at specific months of the year. The peak is around August followed by a large drop in September and October.
+
+##FQ3.3: Fit a multiple regression model
+```{r}
+Margin=Condo[[4]]
+t=Condo[[1]]
+month=Condo[[3]]
+fit6<-lm(Margin~t+month)
+summary(fit6)
+```
+
+##FQ3.4: Goodness of fit
+The coefficient of determination for the model is given by 0.09811. The value is very small hence this means that this model does not accurately model the data set.
+
+##FQ3.5: Predictions
+```{r}
+new.frame=data.frame(t=12,month=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"))
+Predictions=predict(fit6,new.frame,interval="prediction",level=0.95,n.ahead=12)
+```
+
+```{r}
+a<-as.data.frame(Predictions);e=as.data.frame(a[[2]]);f=as.data.frame(a[[3]])
+c<-as.data.frame(a[[1]]);b=as.data.frame(1:12);d=data.frame(b,c,e,f)
+ggplot(d,aes(x=X1.12,y=a..1..))+geom_line()+geom_point()
+```
+
+The upper and lower bound plot for the predictions is;
+```{r}
+ggplot(d,aes(x=X1.12,y=a..2..))+geom_line(color=(1:12))+geom_line(aes(x=X1.12,y=a..3..),color=(1:12))
+```
+
+#FQ4: Salary Discrimination
+
+##FQ4.1 Scatterplot matrix
+```{r}
+load("C:/Users/Nimo/Desktop/Job/Final/Salary.rda")
+plot(Salary)
+```
+
+##FQ4.2: Inspection of plot
+There does not appear to be discrimination against females at the college. This is because the salaries of the two genders appear to be distributed evenly.There is a very distinct gap between the highest salary for a female and the rest of the salaries. 
+
+##FQ4.2: Estimated regression for sexFemale
+```{r}
+salary=Salary[[6]]
+degree=Salary[[1]]
+rank=Salary[[2]]
+sex=Salary[[3]]
+year=Salary[[4]]
+ysdeg=Salary[[5]]
+fit7=lm(salary~degree+rank+sex+year+ysdeg)
+```
+
+
+The estimated regression coefficient for the sexFemale predictor variable is 3344.4. This is the marginal effect of a change in the salary given that a change in the sex variable. This value is not as large therefore it means that one's gender does not really affect their amount of salary.
+
+The confidence interval is given by
+```{r}
+E=qt(0.975,df=51)*sd(sex)/sqrt(52)
+3344.4-E;3344.4+E
+```
+This means that we have 95% confidence that the true value of the sexFemale coefficient lies between 3344.275 and 3344.525.
+
+##FQ4.3: Assumptions
+The assumptions for multiple regression are
+1. All the variables are normally distributed. 
+```{r}
+plot(degree)
+plot(sex)
+plot(rank)
+plot(year)
+plot(ysdeg)
+plot(salary)
+```
+
+On plotting the variables, it is quite evident that the data is not from a normal distribution. Most of the variables have a skewed distribution. 
+
+2. There exists a linear relationship between the predictor and response variables.
+```{r}
+plot(fit7)
+```
+
+With the use of graphical analysis, it can be seen that the graph of the residual does not form a straight line. It is in fact a bit curved downward. This indicates the presence of a non-linear realtionship between the variables.
+
+3. The variables were measured without error. There are several outliers in the data and hence it may be that the data was not accurately measured during data collection.
+
+
+4. The variance of the errors is the same for all levels, that is, homoscedasticity.
+On observing the Scale-Location plot, it is evident that the data exhibits heteroscedasticity. This is beacuse the data does not appear to have a constant variance throughout.
+
