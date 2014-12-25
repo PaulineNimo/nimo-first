@@ -1,0 +1,24 @@
+clinData<-read.table("TaylorClinicalData_for_CNA_data.txt", header = TRUE, sep = "\t", na.strings = "NA", quote = "", comment.char = "")
+#fit and plot Kaplan-Meyer curves for Primary vs Mets:
+library(survival)
+pFit <- survfit(Surv(BCR_FreeTime, BCR_Event) ~ Type, data = clinData)
+plot(pFit, xlab="Follow-Up Time", ylab="Fraction Surviving",main="Kaplan-Meier Survival Estimates",col = c("green", "purple"))
+legend("topright", levels(clinData$Type), lty = 1, col = c("green", "purple"))
+abline(a=.5, b=0)
+#########  Run Cox proportional hazard #############
+# Before fit the Cox proportional hazard, the variables should convert to numeric :
+clinData $PathStage <- as.numeric(clinData $PathStage)
+clinData $PathGGS <- as.numeric(clinData $ PathGGS)
+clinData $ PathGG2 <- as.numeric(clinData $ PathGG2) 
+# Fit Cox proportional hazard and plot curves for the covariates:
+coxFit2<-coxph(formula = Surv(BCR_FreeTime, BCR_Event) ~ PreDxBxPSA +PathGGS + PathGG2 + PathStage, data = clinData)
+plot(survfit(coxFit2, xlab="Follow-Up Time", ylab="Hazared Ratio",main="Cox Hazard Model",col = c("green", "purple", "red")))
+#########  Run Log- Logistic model #############
+logaic12= survreg(formula = Surv(BCR_FreeTime, BCR_Event) ~ Type+ Race+ PreDxBxPSA+ DxAge+BxGG1+ BxGGS+ ClinT_Stage+ SMS+ ECE+ SVI+ LNI+ PathStage+ PathGG1+ PathGGS, data = clinData, dist="loglogistic")
+#Nelson-Aalen
+fit1<-(coxph(Surv(BCR_FreeTime,BCR_Event)~Type,method="breslow",data=clinData))
+h1<-basehaz(fit1)
+h1
+jump<-pFit$n.event>0
+h2<-cumsum(pFit$n.event[jump]/pFit$n.risk[jump])
+min(abs(h1$hazard-h2))
